@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package pipeline.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/pipeline/v1;pipelinev1";
+
+// A Pipeline is a self-contained snippet of configuration that can be assigned to
+// collectors based on matchers.
+message Pipeline {
+  // (required) The name of the pipeline. This is the unique identifier for the pipeline.
+  string name = 1;
+
+  // (required) The configuration contents of the pipeline to be used by collectors.
+  string contents = 2;
+
+  // Matchers are used to match against collectors and assign pipelines to them.
+  // They follow the syntax of the Prometheus [Alertmanager matchers](https://prometheus.io/docs/alerting/latest/configuration/#matcher)
+  repeated string matchers = 3;
+
+  // The timestamp when the pipeline was created.
+  optional google.protobuf.Timestamp created_at = 4;
+  // The timestamp when the pipeline was last updated.
+  optional google.protobuf.Timestamp updated_at = 5;
+
+  // Whether the pipeline is enabled for collectors.
+  optional bool enabled = 6;
+
+  // The server-assigned ID of the pipeline.
+  optional string id = 7;
+}
+
+// Pipelines represents a list of pipelines.
+message Pipelines {
+  repeated Pipeline pipelines = 1;
+}
+
+// GetPipelineRequest is the request to retrieve a pipeline by its ID.
+message GetPipelineRequest {
+  // (required) The ID of the pipeline to get.
+  string id = 2;
+}
+
+// ListPipelinesRequest is the request to get the full list of pipelines, including their
+// contents and matchers.
+message ListPipelinesRequest {
+}
+
+// CreateAlloyPipelinesRequest is the request to create initial alloy pipelines.
+// This is used by the Fleet Management service to create an initial set of
+// pipelines and is not intended to be used by end users.
+message CreateAlloyPipelinesRequest {
+  // The URL to write metrics to Grafana Cloud Mimir.
+  string mimir_url = 1;
+  // The tenant username to write metrics to Grafana Cloud Mimir.
+  string mimir_username = 2;
+
+  // The URL to write logs to Grafana Cloud Loki.
+  string loki_url = 3;
+  // The tenant username to write logs to Grafana Cloud Loki.
+  string loki_username = 4;
+}
+
+// CreateAlloyPipelinesResponse is the response to creating initial alloy pipelines.
+message CreateAlloyPipelinesResponse {
+  Pipelines pipelines = 1;
+}
+
+// CreatePipelineRequest is the request to create a new pipeline.
+message CreatePipelineRequest {
+  // (required) The pipeline to create.
+  Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't create the actual resource.
+  bool validate_only = 2;
+
+}
+
+// UpdatePipelineRequest is the request to update an existing pipeline. If the pipeline does not
+// already exist, this will return a 404 'NOT_FOUND' error.
+message UpdatePipelineRequest {
+  // (required) The contents of the pipeline to update. This will replace the existing pipeline contents, 
+  // so any fields that are not set will end up being removed.
+  Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't update the actual resource.
+  bool validate_only = 2;
+}
+
+// UpsertPipelineRequest is the request to create a new pipeline *or* update an existing one.
+message UpsertPipelineRequest {
+  // (required) The pipeline to create or update. If the pipeline already exists, it will be updated and
+  // like UpdatePipelineRequest, any fields that are not set will be removed.
+  Pipeline pipeline = 1;
+}
+
+// DeletePipelineRequest is the request to delete a pipeline by its ID.
+message DeletePipelineRequest {
+  // (required) The ID of the pipeline to delete.
+  string id = 2;
+}
+
+// DeletePipelineResponse is the response to deleting a pipeline. This message is empty and the results
+// of the deletion are defined by the HTTP status code of the response.
+message DeletePipelineResponse {
+}
+
+// GetPipelineIDRequest is the request to retrieve a pipeline ID by its name.
+message GetPipelineIDRequest {
+  // (required) The name of the pipeline to get the ID for.
+  string name = 1;
+}
+
+// GetPipelineIDResponse is the response to retrieving a pipeline ID.
+message GetPipelineIDResponse {
+  // The ID of the pipeline.
+  string id = 1;
+}
+
+// The PipelineService defines the RPCs for managing pipelines.
+service PipelineService {
+  // GetPipeline returns a pipeline by name.
+  rpc GetPipeline (GetPipelineRequest) returns (Pipeline);
+
+  // GetPipelineID returns a pipeline ID by name.
+  rpc GetPipelineID (GetPipelineIDRequest) returns (GetPipelineIDResponse);
+
+  // ListPipelines returns all pipelines.
+  rpc ListPipelines (ListPipelinesRequest) returns (Pipelines);
+
+  // CreateAlloyPipelines creates initial alloy pipelines.
+  rpc CreateAlloyPipelines(CreateAlloyPipelinesRequest) returns (CreateAlloyPipelinesResponse);
+
+  // CreatePipeline creates a new pipeline and returns it.
+  rpc CreatePipeline (CreatePipelineRequest) returns (Pipeline);
+
+  // UpdatePipeline updates an existing pipeline and returns it.
+  rpc UpdatePipeline (UpdatePipelineRequest) returns (Pipeline);
+
+  // UpsertPipeline creates a new pipeline or updates an existing one and returns it.
+  rpc UpsertPipeline (UpsertPipelineRequest) returns (Pipeline);
+
+  // DeletePipeline deletes a pipeline by name.
+  rpc DeletePipeline (DeletePipelineRequest) returns (DeletePipelineResponse);
+}

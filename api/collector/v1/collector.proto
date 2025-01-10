@@ -1,0 +1,193 @@
+syntax = "proto3";
+
+package collector.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/collector/v1;collectorv1";
+
+// GetCollectorRequest is the request to retrieve a collector's information. This will
+// return a single collector's information, represented by the Collector message.
+message GetCollectorRequest {
+  // (required) The ID of the collector to retrieve.
+  string id = 1;
+}
+
+// Collector represents the data for a single Alloy Collector. The ID is used to uniquely
+// identify the Collector, and the attributes and attribute_overrides are used to
+// determine which pipelines to include in the collector's configuration.
+message Collector {
+  // The ID of the collector.
+  string id = 1;
+
+  // The attribute overrides for the collector. Attribute overrides are also known
+  // as custom attributes. These will take precedence over any 
+  // attributes that are set in the collector's local configuration *except* for any
+  // attributes prefixed with "collector". collector.* attributes are reserved for
+  // use by the Fleet Management service.
+  map<string, string> attribute_overrides = 2;
+
+  // The timestamp that the collector was created in the Fleet Management service.
+  optional google.protobuf.Timestamp created_at = 3;
+
+  // The timestamp that the collector was last updated in the Fleet Management service.
+  optional google.protobuf.Timestamp updated_at = 4;
+
+  // The name of the collector. This is used for display purposes only and is not
+  // used to determine the collector's configuration.
+  string name = 5;
+
+  // The last set of received attributes from the Collector in a RegisterCollectorRequest.
+  map<string, string> attributes = 6;
+
+  // Whether the collector is enabled or not. If the collector is disabled, it will receive
+  // empty configurations from the Fleet Management service.
+  optional bool enabled = 7;
+}
+
+// ListCollectorsRequest is the request to list Collectors according to any specified matchers.
+// If no matchers are specified, all Collectors will be returned.
+message ListCollectorsRequest {
+  // The matchers to use to filter the list of Collectors.
+  repeated string matchers = 1;
+}
+
+// Collectors represents a list of Collectors.
+message Collectors {
+  repeated Collector collectors = 1;
+}
+
+// CreateCollectorRequest is the request to create a new Collector.
+message CreateCollectorRequest {
+  // (required) The Collector to create.
+  Collector collector = 1;
+}
+
+// UpdateCollectorRequest is the request to update an existing Collector. It will update the 
+// Collector with the exact values provided in the request. Updates are not selective, and
+// any attributes that are not provided will be removed from the Collector.
+message UpdateCollectorRequest {
+  Collector collector = 1;
+}
+
+// DeleteCollectorRequest is the request to delete an existing Collector.
+message DeleteCollectorRequest {
+  // (required) The ID of the collector to delete.
+  string id = 1;
+}
+
+// BulkUpdateCollectorsRequest is a request to update multiple Collectors' attribute_overrides
+// in a single request. The update will be applied in a single transaction, so any errors will
+// cause the entire request to fail and no Collectors will be updated.
+//
+// A BulkUpdateCollectorsRequest can be used to add, remove, replace, move, or copy attribute
+// overrides for the specified Collectors.
+message BulkUpdateCollectorsRequest {
+  // (required)The IDs of the Collectors to update, must be non-empty.
+  repeated string ids = 1;
+
+  // (required) The operations to apply to the Collectors. They are applied in the order they are provided.
+  repeated Operation ops = 2;
+}
+
+// An Operation is a single operation to apply to a Collector's attribute_overrides.
+message Operation {
+  enum OpType {
+    UNKNOWN = 0;
+    ADD = 1;
+    REMOVE = 2;
+    REPLACE = 3;
+    MOVE = 4;
+    COPY = 5;
+  }
+
+  // (required) Operation to perform
+  OpType op = 1;
+
+  // (required) Path for the operation, this is a JSON path. For example, to access the "foo" attribute
+  // override for a Collector, the path would be "attributeOverrides.foo".
+  string path = 2; 
+
+  // Source path for move or copy operations. Used by the MOVE and COPY operations to specify
+  // the source path to move or copy the value from.
+  optional string from = 3;
+
+  // Value for add and replace operations, as well as selective removal.
+  optional string value = 4;
+
+  // Old value to match against for a selective replace. For example, an oldValue of "bar" would 
+  // only replace an attribute override if the current value is "bar".
+  optional string oldValue = 5; // Old value for selective replace
+}
+
+// BulkUpdateCollectorsResponse is the response to a BulkUpdateCollectorsRequest. This message is
+// empty and the results of the update are defined by the HTTP status code of the response.
+message BulkUpdateCollectorsResponse {
+}
+
+// BulkDeleteCollectorsRequest is a request to delete multiple Collectors.
+message BulkDeleteCollectorsRequest {
+  // (required) The IDs of the Collectors to delete, must be non-empty. If any Collectors do not exist, the
+  // request will fail and no Collectors will be deleted.
+  repeated string ids = 1;
+}
+
+// BulkDeleteCollectorsResponse is the response to a BulkDeleteCollectorsRequest. This message is
+// empty and the results of the delete are defined by the HTTP status code of the response.
+message BulkDeleteCollectorsResponse {
+}
+
+// DeleteCollectorResponse is the response to a DeleteCollectorRequest. This message is empty and
+// the results of the delete are defined by the HTTP status code of the response.
+message DeleteCollectorResponse {
+}
+
+// ListCollectorAttributesRequest is the request to list all attributes that are used for all collectors.
+message ListCollectorAttributesRequest {
+}
+
+// ListCollectorAttributesResponse is the response to a ListCollectorAttributesRequest. It contains
+// maps of all attributes and all their values that are used for all collectors.
+message ListCollectorAttributesResponse {
+  map<string, Attributes> attributes = 1;
+  map<string, Attributes> attribute_overrides = 2;
+}
+
+// Attributes represents a list of values for a single attribute.
+message Attributes {
+  repeated Value values = 1;
+}
+
+// Value represents a single value for an attribute.
+message Value {
+  string value = 1;
+}
+
+// CollectorService is the service that provides remote configuration for the collector.
+// It is used to register and update the collector's attribute overrides, and to fetch the
+// collector's configuration.
+service CollectorService {
+  // GetCollector returns information about the collector.
+  rpc GetCollector (GetCollectorRequest) returns (Collector);
+
+  // ListCollectors returns information about all collectors.
+  rpc ListCollectors (ListCollectorsRequest) returns (Collectors);
+
+  // CreateCollector registers a new collector.
+  rpc CreateCollector (CreateCollectorRequest) returns (Collector);
+
+  // UpdateCollector updates an existing collector.
+  rpc UpdateCollector (UpdateCollectorRequest) returns (Collector);
+
+  // BulkUpdateCollectors updates multiple collectors.
+  rpc BulkUpdateCollectors (BulkUpdateCollectorsRequest) returns (BulkUpdateCollectorsResponse);
+
+  // BulkDeleteCollectors deletes multiple collectors.
+  rpc BulkDeleteCollectors (BulkDeleteCollectorsRequest) returns (BulkDeleteCollectorsResponse);
+
+  // DeleteCollector deletes an existing collector.
+  rpc DeleteCollector (DeleteCollectorRequest) returns (DeleteCollectorResponse);
+
+  // ListCollectorAttributes returns all attributes that are used for all collectors.
+  rpc ListCollectorAttributes (ListCollectorAttributesRequest) returns (ListCollectorAttributesResponse);
+}
