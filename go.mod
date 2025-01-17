@@ -1,6 +1,6 @@
 module github.com/grafana/fleet-management-api
 
-go 1.22.2
+go 1.22.11
 
 require (
 	connectrpc.com/connect v1.16.1

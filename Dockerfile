@@ -1,6 +1,6 @@
 FROM bufbuild/buf:1.43.0 AS buf
 
-FROM golang:1.23.2
+FROM golang:1.23.5
 
 # Copy the buf binary from the buf image to the final image
 COPY --from=buf /usr/local/bin/buf /usr/local/bin/buf
