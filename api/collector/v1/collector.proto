@@ -14,18 +14,23 @@ message GetCollectorRequest {
 }
 
 // Collector represents the data for a single Alloy Collector. The ID is used to uniquely
-// identify the Collector, and the attributes and attribute_overrides are used to
-// determine which pipelines to include in the collector's configuration.
+// identify the Collector, while the combination of local_attributes and
+// remote_attributes are used to determine which pipelines to include in the
+// collector's configuration.
 message Collector {
   // The ID of the collector.
   string id = 1;
 
-  // The attribute overrides for the collector. Attribute overrides are also known
-  // as custom attributes. These will take precedence over any 
-  // attributes that are set in the collector's local configuration *except* for any
-  // attributes prefixed with "collector". collector.* attributes are reserved for
-  // use by the Fleet Management service.
-  map<string, string> attribute_overrides = 2;
+  // DEPRECATED. Use remote_attributes instead.
+  map<string, string> attribute_overrides = 2 [deprecated=true];
+
+  // The remote attribute for the collector. Remote attributes used to be
+  // named attribute overrides.
+  // These will take precedence over any local attributes that are set in the
+  // collector's local configuration *except* for any attributes prefixed with
+  // "collector". collector.* attributes are reserved for use by the Fleet
+  // Management service.
+  map<string, string> remote_attributes = 8;
 
   // The timestamp that the collector was created in the Fleet Management service.
   optional google.protobuf.Timestamp created_at = 3;
@@ -76,12 +81,12 @@ message DeleteCollectorRequest {
   string id = 1;
 }
 
-// BulkUpdateCollectorsRequest is a request to update multiple Collectors' attribute_overrides
+// BulkUpdateCollectorsRequest is a request to update multiple Collectors' remote_attributes
 // in a single request. The update will be applied in a single transaction, so any errors will
 // cause the entire request to fail and no Collectors will be updated.
 //
-// A BulkUpdateCollectorsRequest can be used to add, remove, replace, move, or copy attribute
-// overrides for the specified Collectors.
+// A BulkUpdateCollectorsRequest can be used to add, remove, replace, move, or copy remote
+// attributes for the specified Collectors.
 message BulkUpdateCollectorsRequest {
   // (required)The IDs of the Collectors to update, must be non-empty.
   repeated string ids = 1;
@@ -90,7 +95,7 @@ message BulkUpdateCollectorsRequest {
   repeated Operation ops = 2;
 }
 
-// An Operation is a single operation to apply to a Collector's attribute_overrides.
+// An Operation is a single operation to apply to a Collector's remote_attributes
 message Operation {
   enum OpType {
     UNKNOWN = 0;
@@ -104,8 +109,8 @@ message Operation {
   // (required) Operation to perform
   OpType op = 1;
 
-  // (required) Path for the operation, this is a JSON path. For example, to access the "foo" attribute
-  // override for a Collector, the path would be "attributeOverrides.foo".
+  // (required) Path for the operation, this is a JSON path. For example, to access the "foo" remote
+  // attribute for a Collector, the path would be "remoteAttributes.foo".
   string path = 2; 
 
   // Source path for move or copy operations. Used by the MOVE and COPY operations to specify
@@ -116,7 +121,7 @@ message Operation {
   optional string value = 4;
 
   // Old value to match against for a selective replace. For example, an oldValue of "bar" would 
-  // only replace an attribute override if the current value is "bar".
+  // only replace a remote attribute if the current value is "bar".
   optional string oldValue = 5; // Old value for selective replace
 }
 
@@ -149,8 +154,12 @@ message ListCollectorAttributesRequest {
 // ListCollectorAttributesResponse is the response to a ListCollectorAttributesRequest. It contains
 // maps of all attributes and all their values that are used for all collectors.
 message ListCollectorAttributesResponse {
-  map<string, Attributes> attributes = 1;
-  map<string, Attributes> attribute_overrides = 2;
+  // DEPRECATED. Use local_attributes instead.
+  map<string, Attributes> attributes = 1 [deprecated=true];
+  // DEPRECATED. Use remote_attributes instead.
+  map<string, Attributes> attribute_overrides = 2 [deprecated=true];
+  map<string, Attributes> local_attributes = 3;
+  map<string, Attributes> remote_attributes = 4;
 }
 
 // Attributes represents a list of values for a single attribute.
@@ -164,7 +173,7 @@ message Value {
 }
 
 // CollectorService is the service that provides remote configuration for the collector.
-// It is used to register and update the collector's attribute overrides, and to fetch the
+// It is used to register and update the collector's remote attributes, and to fetch the
 // collector's configuration.
 service CollectorService {
   // GetCollector returns information about the collector.
