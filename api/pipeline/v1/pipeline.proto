@@ -118,6 +118,49 @@ message GetPipelineIDResponse {
   string id = 1;
 }
 
+// A PipelineRevision is a snapshot of a pipeline at a specific point in time.
+message PipelineRevision {
+  // The server-assigned ID of the pipeline revision.
+  string revision_id = 1;
+
+  // The snapshot of the pipeline at the time.
+  Pipeline snapshot = 2;
+
+  // The timestamp when the pipeline revision was created.
+  google.protobuf.Timestamp created_at = 3;
+
+  enum Operation {
+    UNSPECIFIED = 0;
+    INSERT = 1;
+    UPDATE = 2;
+    DELETE = 3;
+  }
+
+  // The operation that was performed on the pipeline.
+  Operation operation = 4;
+}
+
+// PipelineRevisions represents a list of pipeline revisions.
+message PipelineRevisions {
+  repeated PipelineRevision pipeline_revisions = 1;
+}
+
+// ListPipelinesRevisionsRequest is the request to get the full list of pipeline revisions.
+message ListPipelinesRevisionsRequest {
+}
+
+// ListPipelineRevisionsRequest is the request to get the full list of pipeline revisions for a pipeline.
+message ListPipelineRevisionsRequest {
+  // (required) The ID of the pipeline to get.
+  string id = 1;
+}
+
+// GetPipelineRevisionRequest is the request to retrieve a pipeline revision by its ID.
+message GetPipelineRevisionRequest {
+  // (required) The ID of the pipeline revision to get.
+  string revision_id = 1;
+}
+
 // The PipelineService defines the RPCs for managing pipelines.
 service PipelineService {
   // GetPipeline returns a pipeline by name.
@@ -143,4 +186,13 @@ service PipelineService {
 
   // DeletePipeline deletes a pipeline by name.
   rpc DeletePipeline (DeletePipelineRequest) returns (DeletePipelineResponse);
+
+  // ListPipelinesRevisions returns all pipeline revisions.
+  rpc ListPipelinesRevisions (ListPipelinesRevisionsRequest) returns (PipelineRevisions);
+
+  // ListPipelineRevisions returns all pipeline revisions for a pipeline.
+  rpc ListPipelineRevisions (ListPipelineRevisionsRequest) returns (PipelineRevisions);
+
+  // GetPipelineRevision returns a single pipeline revision.
+  rpc GetPipelineRevision (GetPipelineRevisionRequest) returns (PipelineRevision);
 }

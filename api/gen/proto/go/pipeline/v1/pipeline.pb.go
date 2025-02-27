@@ -21,6 +21,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type PipelineRevision_Operation int32
+
+const (
+	PipelineRevision_UNSPECIFIED PipelineRevision_Operation = 0
+	PipelineRevision_INSERT      PipelineRevision_Operation = 1
+	PipelineRevision_UPDATE      PipelineRevision_Operation = 2
+	PipelineRevision_DELETE      PipelineRevision_Operation = 3
+)
+
+// Enum value maps for PipelineRevision_Operation.
+var (
+	PipelineRevision_Operation_name = map[int32]string{
+		0: "UNSPECIFIED",
+		1: "INSERT",
+		2: "UPDATE",
+		3: "DELETE",
+	}
+	PipelineRevision_Operation_value = map[string]int32{
+		"UNSPECIFIED": 0,
+		"INSERT":      1,
+		"UPDATE":      2,
+		"DELETE":      3,
+	}
+)
+
+func (x PipelineRevision_Operation) Enum() *PipelineRevision_Operation {
+	p := new(PipelineRevision_Operation)
+	*p = x
+	return p
+}
+
+func (x PipelineRevision_Operation) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PipelineRevision_Operation) Descriptor() protoreflect.EnumDescriptor {
+	return file_pipeline_v1_pipeline_proto_enumTypes[0].Descriptor()
+}
+
+func (PipelineRevision_Operation) Type() protoreflect.EnumType {
+	return &file_pipeline_v1_pipeline_proto_enumTypes[0]
+}
+
+func (x PipelineRevision_Operation) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PipelineRevision_Operation.Descriptor instead.
+func (PipelineRevision_Operation) EnumDescriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{13, 0}
+}
+
 // A Pipeline is a self-contained snippet of configuration that can be assigned to
 // collectors based on matchers.
 type Pipeline struct {
@@ -744,6 +796,267 @@ func (x *GetPipelineIDResponse) GetId() string {
 	return ""
 }
 
+// A PipelineRevision is a snapshot of a pipeline at a specific point in time.
+type PipelineRevision struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The server-assigned ID of the pipeline revision.
+	RevisionId string `protobuf:"bytes,1,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+	// The snapshot of the pipeline at the time.
+	Snapshot *Pipeline `protobuf:"bytes,2,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+	// The timestamp when the pipeline revision was created.
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// The operation that was performed on the pipeline.
+	Operation PipelineRevision_Operation `protobuf:"varint,4,opt,name=operation,proto3,enum=pipeline.v1.PipelineRevision_Operation" json:"operation,omitempty"`
+}
+
+func (x *PipelineRevision) Reset() {
+	*x = PipelineRevision{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pipeline_v1_pipeline_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PipelineRevision) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PipelineRevision) ProtoMessage() {}
+
+func (x *PipelineRevision) ProtoReflect() protoreflect.Message {
+	mi := &file_pipeline_v1_pipeline_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PipelineRevision.ProtoReflect.Descriptor instead.
+func (*PipelineRevision) Descriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *PipelineRevision) GetRevisionId() string {
+	if x != nil {
+		return x.RevisionId
+	}
+	return ""
+}
+
+func (x *PipelineRevision) GetSnapshot() *Pipeline {
+	if x != nil {
+		return x.Snapshot
+	}
+	return nil
+}
+
+func (x *PipelineRevision) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *PipelineRevision) GetOperation() PipelineRevision_Operation {
+	if x != nil {
+		return x.Operation
+	}
+	return PipelineRevision_UNSPECIFIED
+}
+
+// PipelineRevisions represents a list of pipeline revisions.
+type PipelineRevisions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PipelineRevisions []*PipelineRevision `protobuf:"bytes,1,rep,name=pipeline_revisions,json=pipelineRevisions,proto3" json:"pipeline_revisions,omitempty"`
+}
+
+func (x *PipelineRevisions) Reset() {
+	*x = PipelineRevisions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pipeline_v1_pipeline_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PipelineRevisions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PipelineRevisions) ProtoMessage() {}
+
+func (x *PipelineRevisions) ProtoReflect() protoreflect.Message {
+	mi := &file_pipeline_v1_pipeline_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PipelineRevisions.ProtoReflect.Descriptor instead.
+func (*PipelineRevisions) Descriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PipelineRevisions) GetPipelineRevisions() []*PipelineRevision {
+	if x != nil {
+		return x.PipelineRevisions
+	}
+	return nil
+}
+
+// ListPipelinesRevisionsRequest is the request to get the full list of pipeline revisions.
+type ListPipelinesRevisionsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ListPipelinesRevisionsRequest) Reset() {
+	*x = ListPipelinesRevisionsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pipeline_v1_pipeline_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListPipelinesRevisionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPipelinesRevisionsRequest) ProtoMessage() {}
+
+func (x *ListPipelinesRevisionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pipeline_v1_pipeline_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPipelinesRevisionsRequest.ProtoReflect.Descriptor instead.
+func (*ListPipelinesRevisionsRequest) Descriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{15}
+}
+
+// ListPipelineRevisionsRequest is the request to get the full list of pipeline revisions for a pipeline.
+type ListPipelineRevisionsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// (required) The ID of the pipeline to get.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *ListPipelineRevisionsRequest) Reset() {
+	*x = ListPipelineRevisionsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pipeline_v1_pipeline_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListPipelineRevisionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPipelineRevisionsRequest) ProtoMessage() {}
+
+func (x *ListPipelineRevisionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pipeline_v1_pipeline_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPipelineRevisionsRequest.ProtoReflect.Descriptor instead.
+func (*ListPipelineRevisionsRequest) Descriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListPipelineRevisionsRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// GetPipelineRevisionRequest is the request to retrieve a pipeline revision by its ID.
+type GetPipelineRevisionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// (required) The ID of the pipeline revision to get.
+	RevisionId string `protobuf:"bytes,1,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+}
+
+func (x *GetPipelineRevisionRequest) Reset() {
+	*x = GetPipelineRevisionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pipeline_v1_pipeline_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetPipelineRevisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPipelineRevisionRequest) ProtoMessage() {}
+
+func (x *GetPipelineRevisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pipeline_v1_pipeline_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPipelineRevisionRequest.ProtoReflect.Descriptor instead.
+func (*GetPipelineRevisionRequest) Descriptor() ([]byte, []int) {
+	return file_pipeline_v1_pipeline_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetPipelineRevisionRequest) GetRevisionId() string {
+	if x != nil {
+		return x.RevisionId
+	}
+	return ""
+}
+
 var File_pipeline_v1_pipeline_proto protoreflect.FileDescriptor
 
 var file_pipeline_v1_pipeline_proto_rawDesc = []byte{
@@ -823,7 +1136,41 @@ var file_pipeline_v1_pipeline_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22,
 	0x27, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x49, 0x44,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x32, 0xab, 0x05, 0x0a, 0x0f, 0x50, 0x69, 0x70,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0xaa, 0x02, 0x0a, 0x10, 0x50, 0x69, 0x70,
+	0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1f, 0x0a,
+	0x0b, 0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0a, 0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x31,
+	0x0a, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x15, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50,
+	0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f,
+	0x74, 0x12, 0x39, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x45, 0x0a, 0x09,
+	0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32,
+	0x27, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x69,
+	0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x4f,
+	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x22, 0x40, 0x0a, 0x09, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x12, 0x0f, 0x0a, 0x0b, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10,
+	0x00, 0x12, 0x0a, 0x0a, 0x06, 0x49, 0x4e, 0x53, 0x45, 0x52, 0x54, 0x10, 0x01, 0x12, 0x0a, 0x0a,
+	0x06, 0x55, 0x50, 0x44, 0x41, 0x54, 0x45, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x44, 0x45, 0x4c,
+	0x45, 0x54, 0x45, 0x10, 0x03, 0x22, 0x61, 0x0a, 0x11, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e,
+	0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x4c, 0x0a, 0x12, 0x70, 0x69,
+	0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x5f, 0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e,
+	0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x11, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52,
+	0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x1f, 0x0a, 0x1d, 0x4c, 0x69, 0x73, 0x74,
+	0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x2e, 0x0a, 0x1c, 0x4c, 0x69, 0x73,
+	0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x3d, 0x0a, 0x1a, 0x47, 0x65, 0x74,
+	0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x72, 0x65, 0x76, 0x69, 0x73,
+	0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x72, 0x65,
+	0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x32, 0xd4, 0x07, 0x0a, 0x0f, 0x50, 0x69, 0x70,
 	0x65, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x45, 0x0a, 0x0b,
 	0x47, 0x65, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x12, 0x1f, 0x2e, 0x70, 0x69,
 	0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x69, 0x70,
@@ -866,13 +1213,31 @@ var file_pipeline_v1_pipeline_proto_rawDesc = []byte{
 	0x74, 0x65, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x23, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e,
 	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x51, 0x5a, 0x4f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x72, 0x61, 0x66, 0x61, 0x6e, 0x61, 0x2f, 0x66, 0x6c, 0x65,
-	0x65, 0x74, 0x2d, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2d, 0x61, 0x70,
-	0x69, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
-	0x67, 0x6f, 0x2f, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x70,
-	0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x64, 0x0a, 0x16, 0x4c, 0x69, 0x73, 0x74, 0x50, 0x69,
+	0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73,
+	0x12, 0x2a, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x69, 0x73, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x52, 0x65, 0x76, 0x69,
+	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1e, 0x2e, 0x70,
+	0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x69, 0x70, 0x65, 0x6c,
+	0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x62, 0x0a, 0x15,
+	0x4c, 0x69, 0x73, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69,
+	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x29, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65,
+	0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65,
+	0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1e, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50,
+	0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73,
+	0x12, 0x5d, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52,
+	0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x27, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69,
+	0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e,
+	0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1d, 0x2e, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50,
+	0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x42,
+	0x51, 0x5a, 0x4f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x72,
+	0x61, 0x66, 0x61, 0x6e, 0x61, 0x2f, 0x66, 0x6c, 0x65, 0x65, 0x74, 0x2d, 0x6d, 0x61, 0x6e, 0x61,
+	0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2d, 0x61, 0x70, 0x69, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x67,
+	0x65, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f, 0x70, 0x69, 0x70, 0x65,
+	0x6c, 0x69, 0x6e, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65,
+	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -887,52 +1252,69 @@ func file_pipeline_v1_pipeline_proto_rawDescGZIP() []byte {
 	return file_pipeline_v1_pipeline_proto_rawDescData
 }
 
-var file_pipeline_v1_pipeline_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_pipeline_v1_pipeline_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_pipeline_v1_pipeline_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_pipeline_v1_pipeline_proto_goTypes = []any{
-	(*Pipeline)(nil),                     // 0: pipeline.v1.Pipeline
-	(*Pipelines)(nil),                    // 1: pipeline.v1.Pipelines
-	(*GetPipelineRequest)(nil),           // 2: pipeline.v1.GetPipelineRequest
-	(*ListPipelinesRequest)(nil),         // 3: pipeline.v1.ListPipelinesRequest
-	(*CreateAlloyPipelinesRequest)(nil),  // 4: pipeline.v1.CreateAlloyPipelinesRequest
-	(*CreateAlloyPipelinesResponse)(nil), // 5: pipeline.v1.CreateAlloyPipelinesResponse
-	(*CreatePipelineRequest)(nil),        // 6: pipeline.v1.CreatePipelineRequest
-	(*UpdatePipelineRequest)(nil),        // 7: pipeline.v1.UpdatePipelineRequest
-	(*UpsertPipelineRequest)(nil),        // 8: pipeline.v1.UpsertPipelineRequest
-	(*DeletePipelineRequest)(nil),        // 9: pipeline.v1.DeletePipelineRequest
-	(*DeletePipelineResponse)(nil),       // 10: pipeline.v1.DeletePipelineResponse
-	(*GetPipelineIDRequest)(nil),         // 11: pipeline.v1.GetPipelineIDRequest
-	(*GetPipelineIDResponse)(nil),        // 12: pipeline.v1.GetPipelineIDResponse
-	(*timestamppb.Timestamp)(nil),        // 13: google.protobuf.Timestamp
+	(PipelineRevision_Operation)(0),       // 0: pipeline.v1.PipelineRevision.Operation
+	(*Pipeline)(nil),                      // 1: pipeline.v1.Pipeline
+	(*Pipelines)(nil),                     // 2: pipeline.v1.Pipelines
+	(*GetPipelineRequest)(nil),            // 3: pipeline.v1.GetPipelineRequest
+	(*ListPipelinesRequest)(nil),          // 4: pipeline.v1.ListPipelinesRequest
+	(*CreateAlloyPipelinesRequest)(nil),   // 5: pipeline.v1.CreateAlloyPipelinesRequest
+	(*CreateAlloyPipelinesResponse)(nil),  // 6: pipeline.v1.CreateAlloyPipelinesResponse
+	(*CreatePipelineRequest)(nil),         // 7: pipeline.v1.CreatePipelineRequest
+	(*UpdatePipelineRequest)(nil),         // 8: pipeline.v1.UpdatePipelineRequest
+	(*UpsertPipelineRequest)(nil),         // 9: pipeline.v1.UpsertPipelineRequest
+	(*DeletePipelineRequest)(nil),         // 10: pipeline.v1.DeletePipelineRequest
+	(*DeletePipelineResponse)(nil),        // 11: pipeline.v1.DeletePipelineResponse
+	(*GetPipelineIDRequest)(nil),          // 12: pipeline.v1.GetPipelineIDRequest
+	(*GetPipelineIDResponse)(nil),         // 13: pipeline.v1.GetPipelineIDResponse
+	(*PipelineRevision)(nil),              // 14: pipeline.v1.PipelineRevision
+	(*PipelineRevisions)(nil),             // 15: pipeline.v1.PipelineRevisions
+	(*ListPipelinesRevisionsRequest)(nil), // 16: pipeline.v1.ListPipelinesRevisionsRequest
+	(*ListPipelineRevisionsRequest)(nil),  // 17: pipeline.v1.ListPipelineRevisionsRequest
+	(*GetPipelineRevisionRequest)(nil),    // 18: pipeline.v1.GetPipelineRevisionRequest
+	(*timestamppb.Timestamp)(nil),         // 19: google.protobuf.Timestamp
 }
 var file_pipeline_v1_pipeline_proto_depIdxs = []int32{
-	13, // 0: pipeline.v1.Pipeline.created_at:type_name -> google.protobuf.Timestamp
-	13, // 1: pipeline.v1.Pipeline.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: pipeline.v1.Pipelines.pipelines:type_name -> pipeline.v1.Pipeline
-	1,  // 3: pipeline.v1.CreateAlloyPipelinesResponse.pipelines:type_name -> pipeline.v1.Pipelines
-	0,  // 4: pipeline.v1.CreatePipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
-	0,  // 5: pipeline.v1.UpdatePipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
-	0,  // 6: pipeline.v1.UpsertPipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
-	2,  // 7: pipeline.v1.PipelineService.GetPipeline:input_type -> pipeline.v1.GetPipelineRequest
-	11, // 8: pipeline.v1.PipelineService.GetPipelineID:input_type -> pipeline.v1.GetPipelineIDRequest
-	3,  // 9: pipeline.v1.PipelineService.ListPipelines:input_type -> pipeline.v1.ListPipelinesRequest
-	4,  // 10: pipeline.v1.PipelineService.CreateAlloyPipelines:input_type -> pipeline.v1.CreateAlloyPipelinesRequest
-	6,  // 11: pipeline.v1.PipelineService.CreatePipeline:input_type -> pipeline.v1.CreatePipelineRequest
-	7,  // 12: pipeline.v1.PipelineService.UpdatePipeline:input_type -> pipeline.v1.UpdatePipelineRequest
-	8,  // 13: pipeline.v1.PipelineService.UpsertPipeline:input_type -> pipeline.v1.UpsertPipelineRequest
-	9,  // 14: pipeline.v1.PipelineService.DeletePipeline:input_type -> pipeline.v1.DeletePipelineRequest
-	0,  // 15: pipeline.v1.PipelineService.GetPipeline:output_type -> pipeline.v1.Pipeline
-	12, // 16: pipeline.v1.PipelineService.GetPipelineID:output_type -> pipeline.v1.GetPipelineIDResponse
-	1,  // 17: pipeline.v1.PipelineService.ListPipelines:output_type -> pipeline.v1.Pipelines
-	5,  // 18: pipeline.v1.PipelineService.CreateAlloyPipelines:output_type -> pipeline.v1.CreateAlloyPipelinesResponse
-	0,  // 19: pipeline.v1.PipelineService.CreatePipeline:output_type -> pipeline.v1.Pipeline
-	0,  // 20: pipeline.v1.PipelineService.UpdatePipeline:output_type -> pipeline.v1.Pipeline
-	0,  // 21: pipeline.v1.PipelineService.UpsertPipeline:output_type -> pipeline.v1.Pipeline
-	10, // 22: pipeline.v1.PipelineService.DeletePipeline:output_type -> pipeline.v1.DeletePipelineResponse
-	15, // [15:23] is the sub-list for method output_type
-	7,  // [7:15] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	19, // 0: pipeline.v1.Pipeline.created_at:type_name -> google.protobuf.Timestamp
+	19, // 1: pipeline.v1.Pipeline.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 2: pipeline.v1.Pipelines.pipelines:type_name -> pipeline.v1.Pipeline
+	2,  // 3: pipeline.v1.CreateAlloyPipelinesResponse.pipelines:type_name -> pipeline.v1.Pipelines
+	1,  // 4: pipeline.v1.CreatePipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
+	1,  // 5: pipeline.v1.UpdatePipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
+	1,  // 6: pipeline.v1.UpsertPipelineRequest.pipeline:type_name -> pipeline.v1.Pipeline
+	1,  // 7: pipeline.v1.PipelineRevision.snapshot:type_name -> pipeline.v1.Pipeline
+	19, // 8: pipeline.v1.PipelineRevision.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 9: pipeline.v1.PipelineRevision.operation:type_name -> pipeline.v1.PipelineRevision.Operation
+	14, // 10: pipeline.v1.PipelineRevisions.pipeline_revisions:type_name -> pipeline.v1.PipelineRevision
+	3,  // 11: pipeline.v1.PipelineService.GetPipeline:input_type -> pipeline.v1.GetPipelineRequest
+	12, // 12: pipeline.v1.PipelineService.GetPipelineID:input_type -> pipeline.v1.GetPipelineIDRequest
+	4,  // 13: pipeline.v1.PipelineService.ListPipelines:input_type -> pipeline.v1.ListPipelinesRequest
+	5,  // 14: pipeline.v1.PipelineService.CreateAlloyPipelines:input_type -> pipeline.v1.CreateAlloyPipelinesRequest
+	7,  // 15: pipeline.v1.PipelineService.CreatePipeline:input_type -> pipeline.v1.CreatePipelineRequest
+	8,  // 16: pipeline.v1.PipelineService.UpdatePipeline:input_type -> pipeline.v1.UpdatePipelineRequest
+	9,  // 17: pipeline.v1.PipelineService.UpsertPipeline:input_type -> pipeline.v1.UpsertPipelineRequest
+	10, // 18: pipeline.v1.PipelineService.DeletePipeline:input_type -> pipeline.v1.DeletePipelineRequest
+	16, // 19: pipeline.v1.PipelineService.ListPipelinesRevisions:input_type -> pipeline.v1.ListPipelinesRevisionsRequest
+	17, // 20: pipeline.v1.PipelineService.ListPipelineRevisions:input_type -> pipeline.v1.ListPipelineRevisionsRequest
+	18, // 21: pipeline.v1.PipelineService.GetPipelineRevision:input_type -> pipeline.v1.GetPipelineRevisionRequest
+	1,  // 22: pipeline.v1.PipelineService.GetPipeline:output_type -> pipeline.v1.Pipeline
+	13, // 23: pipeline.v1.PipelineService.GetPipelineID:output_type -> pipeline.v1.GetPipelineIDResponse
+	2,  // 24: pipeline.v1.PipelineService.ListPipelines:output_type -> pipeline.v1.Pipelines
+	6,  // 25: pipeline.v1.PipelineService.CreateAlloyPipelines:output_type -> pipeline.v1.CreateAlloyPipelinesResponse
+	1,  // 26: pipeline.v1.PipelineService.CreatePipeline:output_type -> pipeline.v1.Pipeline
+	1,  // 27: pipeline.v1.PipelineService.UpdatePipeline:output_type -> pipeline.v1.Pipeline
+	1,  // 28: pipeline.v1.PipelineService.UpsertPipeline:output_type -> pipeline.v1.Pipeline
+	11, // 29: pipeline.v1.PipelineService.DeletePipeline:output_type -> pipeline.v1.DeletePipelineResponse
+	15, // 30: pipeline.v1.PipelineService.ListPipelinesRevisions:output_type -> pipeline.v1.PipelineRevisions
+	15, // 31: pipeline.v1.PipelineService.ListPipelineRevisions:output_type -> pipeline.v1.PipelineRevisions
+	14, // 32: pipeline.v1.PipelineService.GetPipelineRevision:output_type -> pipeline.v1.PipelineRevision
+	22, // [22:33] is the sub-list for method output_type
+	11, // [11:22] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_pipeline_v1_pipeline_proto_init() }
@@ -1097,6 +1479,66 @@ func file_pipeline_v1_pipeline_proto_init() {
 				return nil
 			}
 		}
+		file_pipeline_v1_pipeline_proto_msgTypes[13].Exporter = func(v any, i int) any {
+			switch v := v.(*PipelineRevision); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pipeline_v1_pipeline_proto_msgTypes[14].Exporter = func(v any, i int) any {
+			switch v := v.(*PipelineRevisions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pipeline_v1_pipeline_proto_msgTypes[15].Exporter = func(v any, i int) any {
+			switch v := v.(*ListPipelinesRevisionsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pipeline_v1_pipeline_proto_msgTypes[16].Exporter = func(v any, i int) any {
+			switch v := v.(*ListPipelineRevisionsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pipeline_v1_pipeline_proto_msgTypes[17].Exporter = func(v any, i int) any {
+			switch v := v.(*GetPipelineRevisionRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_pipeline_v1_pipeline_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
@@ -1104,13 +1546,14 @@ func file_pipeline_v1_pipeline_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pipeline_v1_pipeline_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   13,
+			NumEnums:      1,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_pipeline_v1_pipeline_proto_goTypes,
 		DependencyIndexes: file_pipeline_v1_pipeline_proto_depIdxs,
+		EnumInfos:         file_pipeline_v1_pipeline_proto_enumTypes,
 		MessageInfos:      file_pipeline_v1_pipeline_proto_msgTypes,
 	}.Build()
 	File_pipeline_v1_pipeline_proto = out.File
