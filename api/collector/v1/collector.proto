@@ -42,12 +42,19 @@ message Collector {
   // used to determine the collector's configuration.
   string name = 5;
 
-  // The last set of received attributes from the Collector in a RegisterCollectorRequest.
-  map<string, string> attributes = 6;
+  // DEPRECATED. Use local_attributes instead.
+  map<string, string> attributes = 6 [deprecated=true];
+
+  // The last set of received local attributes from the Collector in a
+  // RegisterCollectorRequest.
+  map<string, string> local_attributes = 9;
 
   // Whether the collector is enabled or not. If the collector is disabled, it will receive
   // empty configurations from the Fleet Management service.
   optional bool enabled = 7;
+
+  // The timestamp of when the collector was marked inactive.
+  optional google.protobuf.Timestamp marked_inactive_at = 10;
 }
 
 // ListCollectorsRequest is the request to list Collectors according to any specified matchers.
