@@ -165,8 +165,8 @@ type Collector struct {
 	// The last set of received local attributes from the Collector in a
 	// RegisterCollectorRequest.
 	LocalAttributes map[string]string `protobuf:"bytes,9,rep,name=local_attributes,json=localAttributes,proto3" json:"local_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Whether the collector is enabled or not. If the collector is disabled, it will receive
-	// empty configurations from the Fleet Management service.
+	// Whether remote configuration for the collector is enabled or not. If the collector is disabled,
+	// it will receive empty configurations from the Fleet Management service.
 	Enabled *bool `protobuf:"varint,7,opt,name=enabled,proto3,oneof" json:"enabled,omitempty"`
 	// The timestamp of when the collector was marked inactive.
 	MarkedInactiveAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=marked_inactive_at,json=markedInactiveAt,proto3,oneof" json:"marked_inactive_at,omitempty"`
