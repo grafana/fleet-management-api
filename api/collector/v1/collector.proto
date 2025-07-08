@@ -49,8 +49,8 @@ message Collector {
   // RegisterCollectorRequest.
   map<string, string> local_attributes = 9;
 
-  // Whether the collector is enabled or not. If the collector is disabled, it will receive
-  // empty configurations from the Fleet Management service.
+  // Whether remote configuration for the collector is enabled or not. If the collector is disabled,
+  // it will receive empty configurations from the Fleet Management service.
   optional bool enabled = 7;
 
   // The timestamp of when the collector was marked inactive.
