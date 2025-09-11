@@ -29,6 +29,9 @@ message Pipeline {
 
   // The server-assigned ID of the pipeline.
   optional string id = 7;
+
+  // The source of the pipeline.
+  optional PipelineSource source = 9;
 }
 
 // Pipelines represents a list of pipelines.
@@ -161,6 +164,36 @@ message GetPipelineRevisionRequest {
   string revision_id = 1;
 }
 
+// PipelineSource contains information about where a pipeline was last updated from.
+message PipelineSource {
+  enum SourceType {
+    SOURCE_TYPE_UNSPECIFIED = 0;
+    SOURCE_TYPE_GIT = 1;
+    SOURCE_TYPE_TERRAFORM = 2;
+  }
+
+  // The type of the pipeline source.
+  SourceType type = 1;
+
+  // The namespace of the pipeline source, which identifies the particular source that the pipeline
+  // was last updated from.
+  string namespace = 2;
+ }
+
+ // SyncPipelinesRequest is the request to sync pipelines from a source.
+ message SyncPipelinesRequest {
+  // The source of the pipelines to sync.
+  PipelineSource source = 1;
+
+  // The pipelines to sync.
+  repeated Pipeline pipelines = 2;
+ }
+
+ // SyncPipelinesResponse is the response to syncing pipelines from a source. 
+ // This message is empty and the results of the sync are defined by the HTTP status code of the response.
+ message SyncPipelinesResponse {
+ }
+
 // The PipelineService defines the RPCs for managing pipelines.
 service PipelineService {
   // GetPipeline returns a pipeline by name.
@@ -195,4 +228,7 @@ service PipelineService {
 
   // GetPipelineRevision returns a single pipeline revision.
   rpc GetPipelineRevision (GetPipelineRevisionRequest) returns (PipelineRevision);
+
+  // SyncPipelines syncs pipelines from a source.
+  rpc SyncPipelines (SyncPipelinesRequest) returns (SyncPipelinesResponse);
 }

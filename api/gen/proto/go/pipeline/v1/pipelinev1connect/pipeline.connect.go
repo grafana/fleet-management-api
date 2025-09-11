@@ -66,6 +66,9 @@ const (
 	// PipelineServiceGetPipelineRevisionProcedure is the fully-qualified name of the PipelineService's
 	// GetPipelineRevision RPC.
 	PipelineServiceGetPipelineRevisionProcedure = "/pipeline.v1.PipelineService/GetPipelineRevision"
+	// PipelineServiceSyncPipelinesProcedure is the fully-qualified name of the PipelineService's
+	// SyncPipelines RPC.
+	PipelineServiceSyncPipelinesProcedure = "/pipeline.v1.PipelineService/SyncPipelines"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -82,6 +85,7 @@ var (
 	pipelineServiceListPipelinesRevisionsMethodDescriptor = pipelineServiceServiceDescriptor.Methods().ByName("ListPipelinesRevisions")
 	pipelineServiceListPipelineRevisionsMethodDescriptor  = pipelineServiceServiceDescriptor.Methods().ByName("ListPipelineRevisions")
 	pipelineServiceGetPipelineRevisionMethodDescriptor    = pipelineServiceServiceDescriptor.Methods().ByName("GetPipelineRevision")
+	pipelineServiceSyncPipelinesMethodDescriptor          = pipelineServiceServiceDescriptor.Methods().ByName("SyncPipelines")
 )
 
 // PipelineServiceClient is a client for the pipeline.v1.PipelineService service.
@@ -108,6 +112,8 @@ type PipelineServiceClient interface {
 	ListPipelineRevisions(context.Context, *connect.Request[v1.ListPipelineRevisionsRequest]) (*connect.Response[v1.PipelineRevisions], error)
 	// GetPipelineRevision returns a single pipeline revision.
 	GetPipelineRevision(context.Context, *connect.Request[v1.GetPipelineRevisionRequest]) (*connect.Response[v1.PipelineRevision], error)
+	// SyncPipelines syncs pipelines from a source.
+	SyncPipelines(context.Context, *connect.Request[v1.SyncPipelinesRequest]) (*connect.Response[v1.SyncPipelinesResponse], error)
 }
 
 // NewPipelineServiceClient constructs a client for the pipeline.v1.PipelineService service. By
@@ -186,6 +192,12 @@ func NewPipelineServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(pipelineServiceGetPipelineRevisionMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		syncPipelines: connect.NewClient[v1.SyncPipelinesRequest, v1.SyncPipelinesResponse](
+			httpClient,
+			baseURL+PipelineServiceSyncPipelinesProcedure,
+			connect.WithSchema(pipelineServiceSyncPipelinesMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -202,6 +214,7 @@ type pipelineServiceClient struct {
 	listPipelinesRevisions *connect.Client[v1.ListPipelinesRevisionsRequest, v1.PipelineRevisions]
 	listPipelineRevisions  *connect.Client[v1.ListPipelineRevisionsRequest, v1.PipelineRevisions]
 	getPipelineRevision    *connect.Client[v1.GetPipelineRevisionRequest, v1.PipelineRevision]
+	syncPipelines          *connect.Client[v1.SyncPipelinesRequest, v1.SyncPipelinesResponse]
 }
 
 // GetPipeline calls pipeline.v1.PipelineService.GetPipeline.
@@ -259,6 +272,11 @@ func (c *pipelineServiceClient) GetPipelineRevision(ctx context.Context, req *co
 	return c.getPipelineRevision.CallUnary(ctx, req)
 }
 
+// SyncPipelines calls pipeline.v1.PipelineService.SyncPipelines.
+func (c *pipelineServiceClient) SyncPipelines(ctx context.Context, req *connect.Request[v1.SyncPipelinesRequest]) (*connect.Response[v1.SyncPipelinesResponse], error) {
+	return c.syncPipelines.CallUnary(ctx, req)
+}
+
 // PipelineServiceHandler is an implementation of the pipeline.v1.PipelineService service.
 type PipelineServiceHandler interface {
 	// GetPipeline returns a pipeline by name.
@@ -283,6 +301,8 @@ type PipelineServiceHandler interface {
 	ListPipelineRevisions(context.Context, *connect.Request[v1.ListPipelineRevisionsRequest]) (*connect.Response[v1.PipelineRevisions], error)
 	// GetPipelineRevision returns a single pipeline revision.
 	GetPipelineRevision(context.Context, *connect.Request[v1.GetPipelineRevisionRequest]) (*connect.Response[v1.PipelineRevision], error)
+	// SyncPipelines syncs pipelines from a source.
+	SyncPipelines(context.Context, *connect.Request[v1.SyncPipelinesRequest]) (*connect.Response[v1.SyncPipelinesResponse], error)
 }
 
 // NewPipelineServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -357,6 +377,12 @@ func NewPipelineServiceHandler(svc PipelineServiceHandler, opts ...connect.Handl
 		connect.WithSchema(pipelineServiceGetPipelineRevisionMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	pipelineServiceSyncPipelinesHandler := connect.NewUnaryHandler(
+		PipelineServiceSyncPipelinesProcedure,
+		svc.SyncPipelines,
+		connect.WithSchema(pipelineServiceSyncPipelinesMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/pipeline.v1.PipelineService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PipelineServiceGetPipelineProcedure:
@@ -381,6 +407,8 @@ func NewPipelineServiceHandler(svc PipelineServiceHandler, opts ...connect.Handl
 			pipelineServiceListPipelineRevisionsHandler.ServeHTTP(w, r)
 		case PipelineServiceGetPipelineRevisionProcedure:
 			pipelineServiceGetPipelineRevisionHandler.ServeHTTP(w, r)
+		case PipelineServiceSyncPipelinesProcedure:
+			pipelineServiceSyncPipelinesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -432,4 +460,8 @@ func (UnimplementedPipelineServiceHandler) ListPipelineRevisions(context.Context
 
 func (UnimplementedPipelineServiceHandler) GetPipelineRevision(context.Context, *connect.Request[v1.GetPipelineRevisionRequest]) (*connect.Response[v1.PipelineRevision], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pipeline.v1.PipelineService.GetPipelineRevision is not implemented"))
+}
+
+func (UnimplementedPipelineServiceHandler) SyncPipelines(context.Context, *connect.Request[v1.SyncPipelinesRequest]) (*connect.Response[v1.SyncPipelinesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pipeline.v1.PipelineService.SyncPipelines is not implemented"))
 }
