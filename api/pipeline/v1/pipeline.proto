@@ -177,6 +177,9 @@ message PipelineSource {
 
   // The namespace of the pipeline source, which identifies the particular source that the pipeline
   // was last updated from.
+  //
+  // This is used to scope the cleanup of pipelines for a sync to a particular source. Any pipelines
+  // that are not present in the sync that have the same source type and namespace will be deleted.
   string namespace = 2;
  }
 
