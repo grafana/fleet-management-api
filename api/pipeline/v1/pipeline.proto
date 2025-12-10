@@ -4,7 +4,6 @@ package pipeline.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
-import "validation/v1/validation.proto";
 
 
 option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/pipeline/v1;pipelinev1";
@@ -141,20 +140,6 @@ message DeletePipelineRequest {
 message DeletePipelineResponse {
 }
 
-// ValidatePipelineRequest is the request to run validation rules against the input pipeline.
-message ValidatePipelineRequest {
-  // (required) The pipeline to validate
-  Pipeline pipeline = 1;
-}
-
-message ValidatePipelineResponse {
-  // Overall validation success across all versions.
-  bool success = 1;
-  
-  // Validation results per version.
-  repeated validation.v1.Version results = 2;
-}
-
 // GetPipelineIDRequest is the request to retrieve a pipeline ID by its name.
 message GetPipelineIDRequest {
   // (required) The name of the pipeline to get the ID for.
@@ -269,21 +254,13 @@ service PipelineService {
   // DeletePipeline deletes a pipeline by name.
   rpc DeletePipeline (DeletePipelineRequest) returns (DeletePipelineResponse);
 
-  // ValidatePipeline runs validation against a pipeline.
-  rpc ValidatePipeline (ValidatePipelineRequest) returns (ValidatePipelineResponse);
-
   // ListPipelinesRevisions returns all pipeline revisions.
-  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
-  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
   rpc ListPipelinesRevisions (ListPipelinesRevisionsRequest) returns (PipelineRevisions);
 
   // ListPipelineRevisions returns all pipeline revisions for a pipeline.
-  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
-  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
   rpc ListPipelineRevisions (ListPipelineRevisionsRequest) returns (PipelineRevisions);
 
   // GetPipelineRevision returns a single pipeline revision.
-  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
   rpc GetPipelineRevision (GetPipelineRevisionRequest) returns (PipelineRevision);
 
   // SyncPipelines syncs pipelines from a source.
