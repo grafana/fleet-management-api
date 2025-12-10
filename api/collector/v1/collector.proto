@@ -13,6 +13,13 @@ message GetCollectorRequest {
   string id = 1;
 }
 
+// CollectorType represents the type of collector.
+enum CollectorType {
+  COLLECTOR_TYPE_UNSPECIFIED = 0;
+  COLLECTOR_TYPE_ALLOY = 1;
+  COLLECTOR_TYPE_OTEL = 2;
+}
+
 // Collector represents the data for a single Alloy Collector. The ID is used to uniquely
 // identify the Collector, while the combination of local_attributes and
 // remote_attributes are used to determine which pipelines to include in the
@@ -55,6 +62,9 @@ message Collector {
 
   // The timestamp of when the collector was marked inactive.
   optional google.protobuf.Timestamp marked_inactive_at = 10;
+
+  // The type of collector.
+  CollectorType collector_type = 11;
 }
 
 // ListCollectorsRequest is the request to list Collectors according to any specified matchers.

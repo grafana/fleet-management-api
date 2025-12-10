@@ -3,8 +3,17 @@ syntax = "proto3";
 package pipeline.v1;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
 
 option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/pipeline/v1;pipelinev1";
+
+// ConfigType represents the type of config.
+enum ConfigType {
+  CONFIG_TYPE_UNSPECIFIED = 0;
+  CONFIG_TYPE_ALLOY = 1;
+  CONFIG_TYPE_OTEL = 2;
+}
 
 // A Pipeline is a self-contained snippet of configuration that can be assigned to
 // collectors based on matchers.
@@ -30,8 +39,14 @@ message Pipeline {
   // The server-assigned ID of the pipeline.
   optional string id = 7;
 
+  // Optional metadata for the pipeline.
+  optional google.protobuf.Struct metadata = 8;
+
   // The source of the pipeline.
   optional PipelineSource source = 9;
+
+  // The type of config.
+  ConfigType config_type = 10;
 }
 
 // Pipelines represents a list of pipelines.
@@ -48,6 +63,19 @@ message GetPipelineRequest {
 // ListPipelinesRequest is the request to get the full list of pipelines, including their
 // contents and matchers.
 message ListPipelinesRequest {
+  // A set of local attributes used for filtering the response. These will be combined
+  // with the remote attributes input when filtering.
+  map<string, string> local_attributes = 1;
+
+  // A set of remote attributes used for filtering the response. These will be combined
+  // with the local attributes input when filtering.
+  map<string, string> remote_attributes = 2;
+
+  // The type of config to filter by.
+  optional ConfigType config_type = 3;
+
+  // Whether the pipelines should be enabled or not.
+  optional bool enabled = 4;
 }
 
 // CreateAlloyPipelinesRequest is the request to create initial alloy pipelines.
@@ -96,6 +124,9 @@ message UpsertPipelineRequest {
   // (required) The pipeline to create or update. If the pipeline already exists, it will be updated and
   // like UpdatePipelineRequest, any fields that are not set will be removed.
   Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't upsert the actual resource.
+  bool validate_only = 2;
 }
 
 // DeletePipelineRequest is the request to delete a pipeline by its ID.
@@ -171,10 +202,10 @@ message PipelineSource {
     SOURCE_TYPE_GIT = 1;
     SOURCE_TYPE_TERRAFORM = 2;
   }
-
+ 
   // The type of the pipeline source.
   SourceType type = 1;
-
+ 
   // The namespace of the pipeline source, which identifies the particular source that the pipeline
   // was last updated from.
   //
@@ -182,12 +213,12 @@ message PipelineSource {
   // that are not present in the sync that have the same source type and namespace will be deleted.
   string namespace = 2;
  }
-
+ 
  // SyncPipelinesRequest is the request to sync pipelines from a source.
  message SyncPipelinesRequest {
   // The source of the pipelines to sync.
   PipelineSource source = 1;
-
+ 
   // The pipelines to sync.
   repeated Pipeline pipelines = 2;
  }
