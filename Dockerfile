@@ -1,4 +1,4 @@
-FROM bufbuild/buf:1.43.0 AS buf
+FROM bufbuild/buf:1.62.1@sha256:c8da40a9851d5fd2e600d9d18f22dc79d40fa9188c68c1d7c60d902c9a0cb23c AS buf
 
 FROM golang:1.23.5
 
