@@ -140,6 +140,19 @@ message DeletePipelineRequest {
 message DeletePipelineResponse {
 }
 
+// BulkDeletePipelinesRequest is the request to delete multiple pipelines by their IDs.
+// The operation is atomic - either all pipelines are deleted or none are. If any pipeline
+// in the list does not exist, the entire operation fails and no pipelines are deleted.
+message BulkDeletePipelinesRequest {
+  // (required) The IDs of the pipelines to delete. Must be non-empty.
+  repeated string ids = 1;
+}
+
+// BulkDeletePipelinesResponse is the response to deleting multiple pipelines. This message is empty
+// and the results of the deletion are defined by the HTTP status code of the response.
+message BulkDeletePipelinesResponse {
+}
+
 // GetPipelineIDRequest is the request to retrieve a pipeline ID by its name.
 message GetPipelineIDRequest {
   // (required) The name of the pipeline to get the ID for.
@@ -253,6 +266,9 @@ service PipelineService {
 
   // DeletePipeline deletes a pipeline by name.
   rpc DeletePipeline (DeletePipelineRequest) returns (DeletePipelineResponse);
+
+  // BulkDeletePipelines deletes multiple pipelines by their IDs.
+  rpc BulkDeletePipelines (BulkDeletePipelinesRequest) returns (BulkDeletePipelinesResponse);
 
   // ListPipelinesRevisions returns all pipeline revisions.
   rpc ListPipelinesRevisions (ListPipelinesRevisionsRequest) returns (PipelineRevisions);
