@@ -214,32 +214,30 @@ message PipelineSource {
     SOURCE_TYPE_UNSPECIFIED = 0;
     SOURCE_TYPE_GIT = 1;
     SOURCE_TYPE_TERRAFORM = 2;
+    SOURCE_TYPE_GRAFANA = 3;
   }
- 
+
   // The type of the pipeline source.
   SourceType type = 1;
- 
+
   // The namespace of the pipeline source, which identifies the particular source that the pipeline
   // was last updated from.
-  //
-  // This is used to scope the cleanup of pipelines for a sync to a particular source. Any pipelines
-  // that are not present in the sync that have the same source type and namespace will be deleted.
   string namespace = 2;
- }
+}
  
- // SyncPipelinesRequest is the request to sync pipelines from a source.
- message SyncPipelinesRequest {
+// SyncPipelinesRequest is the request to sync pipelines from a source.
+message SyncPipelinesRequest {
   // The source of the pipelines to sync.
   PipelineSource source = 1;
- 
+
   // The pipelines to sync.
   repeated Pipeline pipelines = 2;
- }
+}
 
- // SyncPipelinesResponse is the response to syncing pipelines from a source. 
- // This message is empty and the results of the sync are defined by the HTTP status code of the response.
- message SyncPipelinesResponse {
- }
+// SyncPipelinesResponse is the response to syncing pipelines from a source.
+// This message is empty and the results of the sync are defined by the HTTP status code of the response.
+message SyncPipelinesResponse {
+}
 
 // The PipelineService defines the RPCs for managing pipelines.
 service PipelineService {
