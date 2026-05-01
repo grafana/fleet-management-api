@@ -1,0 +1,35 @@
+name: Protobuf drift
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protobuf-drift-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-generated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build codegen image
+        run: docker build -t fleet-management-api-builder .
+
+      - name: Regenerate protobuf Go code
+        run: docker run --rm -v "${{ github.workspace }}:/api" fleet-management-api-builder
+
+      - name: Verify generated code matches committed output
+        run: |
+          if ! git diff --exit-code -- api/gen/proto/go/; then
+            echo "::error::Protobuf-generated Go code is out of date. Run \`make buf-generate\` locally and commit the updated files under api/gen/proto/go/."
+            exit 1
+          fi
