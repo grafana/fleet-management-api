@@ -91,6 +91,9 @@ message CreateAlloyPipelinesRequest {
   string loki_url = 3;
   // The tenant username to write logs to Grafana Cloud Loki.
   string loki_username = 4;
+
+  // The OTLP endpoint to write telemetry to Grafana Cloud.
+  string otlp_endpoint = 5;
 }
 
 // CreateAlloyPipelinesResponse is the response to creating initial alloy pipelines.
