@@ -1,0 +1,421 @@
+syntax = "proto3";
+
+// Package pipeline.v2alpha1 is an unstable, pre-release version of the Fleet
+// Management pipeline API. It is under active development and is subject to
+// breaking changes at any time, without notice. Do not depend on it for
+// production use.
+package pipeline.v2alpha1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/pipeline/v2alpha1;pipelinev2alpha1";
+
+// ConfigType represents the type of config.
+enum ConfigType {
+  CONFIG_TYPE_UNSPECIFIED = 0;
+  CONFIG_TYPE_ALLOY = 1;
+  CONFIG_TYPE_OTEL = 2;
+}
+
+// PipelineSource contains information about where a pipeline was last updated from.
+message PipelineSource {
+  enum SourceType {
+    SOURCE_TYPE_UNSPECIFIED = 0;
+    SOURCE_TYPE_GIT = 1;
+    SOURCE_TYPE_TERRAFORM = 2;
+    SOURCE_TYPE_GRAFANA = 3;
+  }
+ 
+  // The type of the pipeline source.
+  SourceType type = 1;
+ 
+  // The namespace of the pipeline source, which identifies the particular source that the pipeline
+  // was last updated from.
+  string namespace = 2;
+ }
+
+// A Pipeline is a self-contained snippet of configuration that can be assigned to
+// collectors based on matchers.
+message Pipeline {
+  // (required) The name of the pipeline. This is the unique identifier for the pipeline.
+  string name = 1;
+
+  // (required) The configuration contents of the pipeline to be used by collectors.
+  string contents = 2;
+
+  // Matchers are used to match against collectors and assign pipelines to them.
+  // They follow the syntax of the Prometheus [Alertmanager matchers](https://prometheus.io/docs/alerting/latest/configuration/#matcher)
+  repeated string matchers = 3;
+
+  // The timestamp when the pipeline was created.
+  optional google.protobuf.Timestamp created_at = 4;
+  // The timestamp when the pipeline was last updated.
+  optional google.protobuf.Timestamp updated_at = 5;
+
+  // Whether the pipeline is enabled for collectors.
+  optional bool enabled = 6;
+
+  // The server-assigned ID of the pipeline.
+  optional string id = 7;
+
+  // Optional metadata for the pipeline.
+  optional google.protobuf.Struct metadata = 8;
+
+  // The source of the pipeline.
+  optional PipelineSource source = 9;
+
+  // The type of config.
+  ConfigType config_type = 10;
+}
+
+// Pipelines represents a list of pipelines.
+message Pipelines {
+  repeated Pipeline pipelines = 1;
+}
+
+// GetPipelineRequest is the request to retrieve a pipeline by its ID.
+message GetPipelineRequest {
+  // (required) The ID of the pipeline to get.
+  string id = 2 [(buf.validate.field).cel = {
+    id: "get_pipeline_request.id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// ListPipelinesRequest is the request to list pipelines with pagination and sorting.
+message ListPipelinesRequest {
+  // The field to sort results by.
+  enum SortBy {
+    SORT_BY_UNSPECIFIED = 0;
+    SORT_BY_NAME = 1;
+    SORT_BY_LAST_MODIFIED = 2;
+  }
+
+  // A token for fetching the next page of results. When empty, the first page is returned.
+  // Use the next_page_token from a previous response to retrieve subsequent pages.
+  // If filter, sort_by, or sort_descending changes, omit this token and start again from the first page.
+  string page_token = 1;
+
+  // The maximum number of pipelines to return per page.
+  // When unset or zero, the server default is used.
+  int32 page_size = 2;
+
+  // The field to sort results by. Defaults to name when unspecified.
+  SortBy sort_by = 3;
+
+  // When true, sort results in descending order.
+  bool sort_descending = 4;
+
+  // Search for pipelines matching specified filter.
+  optional ListPipelinesFilter filter = 5;
+}
+
+// Filters to narrow down a ListPipelines result set.
+message ListPipelinesFilter {
+  // Filter to pipelines whose name contains this value.
+  optional string name = 1 [(buf.validate.field).string.max_len = 100];
+}
+
+// ListPipelinesResponse is the response to listing pipelines.
+message ListPipelinesResponse {
+  // The list of pipelines for the current page.
+  repeated Pipeline pipelines = 1;
+
+  // A token for fetching the next page. Empty when there are no more results.
+  string next_page_token = 2;
+}
+
+// CreateAlloyPipelinesRequest is the request to create initial alloy pipelines.
+// This is used by the Fleet Management service to create an initial set of
+// pipelines and is not intended to be used by end users.
+message CreateAlloyPipelinesRequest {
+  // The URL to write metrics to Grafana Cloud Mimir.
+  string mimir_url = 1;
+  // The tenant username to write metrics to Grafana Cloud Mimir.
+  string mimir_username = 2;
+
+  // The URL to write logs to Grafana Cloud Loki.
+  string loki_url = 3;
+  // The tenant username to write logs to Grafana Cloud Loki.
+  string loki_username = 4;
+
+  // The OTLP endpoint to write telemetry to Grafana Cloud.
+  string otlp_endpoint = 5;
+}
+
+// CreateAlloyPipelinesResponse is the response to creating initial alloy pipelines.
+message CreateAlloyPipelinesResponse {
+  Pipelines pipelines = 1;
+}
+
+// CreatePipelineRequest is the request to create a new pipeline.
+message CreatePipelineRequest {
+  option (buf.validate.message).cel = {
+    id: "create_pipeline_request.pipeline.required",
+    message: "pipeline is missing",
+    expression: "has(this.pipeline)"
+  };
+  option (buf.validate.message).cel = {
+    id: "create_pipeline_request.pipeline.id.unexpected",
+    message: "id should not be provided",
+    expression: "!(has(this.pipeline) && has(this.pipeline.id))"
+  };
+
+  // (required) The pipeline to create.
+  Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't create the actual resource.
+  bool validate_only = 2;
+}
+
+// UpdatePipelineRequest is the request to update an existing pipeline. If the pipeline does not
+// already exist, this will return a 404 'NOT_FOUND' error.
+message UpdatePipelineRequest {
+  option (buf.validate.message).cel = {
+    id: "update_pipeline_request.pipeline.required",
+    message: "pipeline is missing",
+    expression: "has(this.pipeline)"
+  };
+  option (buf.validate.message).cel = {
+    id: "update_pipeline_request.pipeline.id.empty",
+    message: "id is empty",
+    expression: "!has(this.pipeline) || (has(this.pipeline.id) && this.pipeline.id != '')"
+  };
+
+  // (required) The contents of the pipeline to update. This will replace the existing pipeline contents,
+  // so any fields that are not set will end up being removed.
+  Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't update the actual resource.
+  bool validate_only = 2;
+}
+
+// UpsertPipelineRequest is the request to create a new pipeline *or* update an existing one.
+message UpsertPipelineRequest {
+  option (buf.validate.message).cel = {
+    id: "upsert_pipeline_request.pipeline.required",
+    message: "pipeline is missing",
+    expression: "has(this.pipeline)"
+  };
+  option (buf.validate.message).cel = {
+    id: "upsert_pipeline_request.pipeline.id.unexpected",
+    message: "id should not be provided",
+    expression: "!(has(this.pipeline) && has(this.pipeline.id))"
+  };
+
+  // (required) The pipeline to create or update. If the pipeline already exists, it will be updated and
+  // like UpdatePipelineRequest, any fields that are not set will be removed.
+  Pipeline pipeline = 1;
+
+  // If set, validate the request and preview the response, but don't upsert the actual resource.
+  bool validate_only = 2;
+}
+
+// DeletePipelineRequest is the request to delete a pipeline by its ID.
+message DeletePipelineRequest {
+  // (required) The ID of the pipeline to delete.
+  string id = 2 [
+    (buf.validate.field).cel = {
+      id: "delete_pipeline_request.id.empty",
+      message: "id is empty",
+      expression: "this.size() > 0"
+    },
+    (buf.validate.field).cel = {
+      id: "delete_pipeline_request.id.integer",
+      message: "id is not a valid integer",
+      expression: "this.size() == 0 || this.matches('^[0-9]+$')"
+    }
+  ];
+}
+
+// DeletePipelineResponse is the response to deleting a pipeline. This message is empty and the results
+// of the deletion are defined by the HTTP status code of the response.
+message DeletePipelineResponse {
+}
+
+// BulkDeletePipelinesRequest is the request to delete multiple pipelines by their IDs.
+// The operation is atomic - either all pipelines are deleted or none are. If any pipeline
+// in the list does not exist, the entire operation fails and no pipelines are deleted.
+message BulkDeletePipelinesRequest {
+  // (required) The IDs of the pipelines to delete. Must be non-empty.
+  repeated string ids = 1 [
+    (buf.validate.field).cel = {
+      id: "bulk_delete_pipelines_request.ids.empty",
+      message: "empty list of ids",
+      expression: "this.size() > 0"
+    },
+    (buf.validate.field).cel = {
+      id: "bulk_delete_pipelines_request.ids.unique",
+      message: "duplicate ids provided",
+      expression: "this.unique()"
+    }
+  ];
+}
+
+// BulkDeletePipelinesResponse is the response to deleting multiple pipelines. This message is empty
+// and the results of the deletion are defined by the HTTP status code of the response.
+message BulkDeletePipelinesResponse {
+}
+
+// GetPipelineIDRequest is the request to retrieve a pipeline ID by its name.
+message GetPipelineIDRequest {
+  // (required) The name of the pipeline to get the ID for.
+  string name = 1 [(buf.validate.field).cel = {
+    id: "get_pipeline_id_request.name.empty",
+    message: "name is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// GetPipelineIDResponse is the response to retrieving a pipeline ID.
+message GetPipelineIDResponse {
+  // The ID of the pipeline.
+  string id = 1;
+}
+
+// A PipelineRevision is a snapshot of a pipeline at a specific point in time.
+message PipelineRevision {
+  // The server-assigned ID of the pipeline revision.
+  string revision_id = 1;
+
+  // The snapshot of the pipeline at the time.
+  Pipeline snapshot = 2;
+
+  // The timestamp when the pipeline revision was created.
+  google.protobuf.Timestamp created_at = 3;
+
+  enum Operation {
+    // buf:lint:ignore ENUM_VALUE_PREFIX
+    // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+    UNSPECIFIED = 0;
+    // buf:lint:ignore ENUM_VALUE_PREFIX
+    INSERT = 1;
+    // buf:lint:ignore ENUM_VALUE_PREFIX
+    UPDATE = 2;
+    // buf:lint:ignore ENUM_VALUE_PREFIX
+    DELETE = 3;
+  }
+
+  // The operation that was performed on the pipeline.
+  Operation operation = 4;
+
+  // The pipeline author extracted from the X-Grafana-User header.
+  optional string author = 5;
+}
+
+// PipelineRevisions represents a list of pipeline revisions.
+message PipelineRevisions {
+  repeated PipelineRevision pipeline_revisions = 1;
+}
+
+// ListPipelinesRevisionsRequest is the request to get the full list of pipeline revisions.
+message ListPipelinesRevisionsRequest {
+}
+
+// ListPipelineRevisionsRequest is the request to get the full list of pipeline revisions for a pipeline.
+message ListPipelineRevisionsRequest {
+  // (required) The ID of the pipeline to get.
+  string id = 1 [(buf.validate.field).cel = {
+    id: "list_pipeline_revisions_request.id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// GetPipelineRevisionRequest is the request to retrieve a pipeline revision by its ID.
+message GetPipelineRevisionRequest {
+  // (required) The ID of the pipeline revision to get.
+  string revision_id = 1 [(buf.validate.field).cel = {
+    id: "get_pipeline_revision_request.revision_id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// SyncPipelinesRequest is the request to sync pipelines from a source.
+message SyncPipelinesRequest {
+  option (buf.validate.message).cel = {
+    id: "sync_pipelines_request.source.required",
+    message: "source is required",
+    expression: "has(this.source)"
+  };
+  option (buf.validate.message).cel = {
+    id: "sync_pipelines_request.source.namespace.required",
+    message: "source namespace is required",
+    expression: "!has(this.source) || this.source.namespace != ''"
+  };
+  option (buf.validate.message).cel = {
+    id: "sync_pipelines_request.source.type.required",
+    message: "source type is required",
+    expression: "!has(this.source) || this.source.type != 0"
+  };
+
+  // The source of the pipelines to sync.
+  PipelineSource source = 1;
+
+  // The pipelines to sync.
+  repeated Pipeline pipelines = 2;
+ }
+
+ // SyncPipelinesResponse is the response to syncing pipelines from a source.
+ // This message is empty and the results of the sync are defined by the HTTP status code of the response.
+ message SyncPipelinesResponse {
+ }
+
+// The PipelineService defines the RPCs for managing pipelines.
+service PipelineService {
+  // GetPipeline returns a pipeline by name.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc GetPipeline (GetPipelineRequest) returns (Pipeline);
+
+  // GetPipelineID returns a pipeline ID by name.
+  rpc GetPipelineID (GetPipelineIDRequest) returns (GetPipelineIDResponse);
+
+  // ListPipelines returns a paginated list of pipelines.
+  rpc ListPipelines (ListPipelinesRequest) returns (ListPipelinesResponse);
+
+  // CreateAlloyPipelines creates initial alloy pipelines.
+  rpc CreateAlloyPipelines(CreateAlloyPipelinesRequest) returns (CreateAlloyPipelinesResponse);
+
+  // CreatePipeline creates a new pipeline and returns it.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc CreatePipeline (CreatePipelineRequest) returns (Pipeline);
+
+  // UpdatePipeline updates an existing pipeline and returns it.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc UpdatePipeline (UpdatePipelineRequest) returns (Pipeline);
+
+  // UpsertPipeline creates a new pipeline or updates an existing one and returns it.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc UpsertPipeline (UpsertPipelineRequest) returns (Pipeline);
+
+  // DeletePipeline deletes a pipeline by name.
+  rpc DeletePipeline (DeletePipelineRequest) returns (DeletePipelineResponse);
+
+  // BulkDeletePipelines deletes multiple pipelines by their IDs.
+  rpc BulkDeletePipelines (BulkDeletePipelinesRequest) returns (BulkDeletePipelinesResponse);
+
+  // ListPipelinesRevisions returns all pipeline revisions.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc ListPipelinesRevisions (ListPipelinesRevisionsRequest) returns (PipelineRevisions);
+
+  // ListPipelineRevisions returns all pipeline revisions for a pipeline.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc ListPipelineRevisions (ListPipelineRevisionsRequest) returns (PipelineRevisions);
+
+  // GetPipelineRevision returns a single pipeline revision.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  rpc GetPipelineRevision (GetPipelineRevisionRequest) returns (PipelineRevision);
+
+  // SyncPipelines syncs pipelines from a source.
+  rpc SyncPipelines (SyncPipelinesRequest) returns (SyncPipelinesResponse);
+}
