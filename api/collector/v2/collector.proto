@@ -1,0 +1,413 @@
+syntax = "proto3";
+
+package collector.v2;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/grafana/fleet-management-api/api/gen/proto/go/collector/v2;collectorv2";
+
+message RemoteConfigStatus {
+    RemoteConfigStatuses status = 1;
+
+    // Optional error message if status==FAILED.
+    string error_message = 2;
+}
+
+enum RemoteConfigStatuses {
+    // The value of status field is not set.
+    RemoteConfigStatuses_UNSET = 0;
+
+    // Remote config was successfully applied by the Collector.
+    RemoteConfigStatuses_APPLIED = 1;
+
+    // Collector is currently applying the remote config that it received earlier.
+    RemoteConfigStatuses_APPLYING = 2;
+
+    // Collector tried to apply the config received earlier, but it failed.
+    // See error_message for more details.
+    RemoteConfigStatuses_FAILED = 3;
+}
+
+// GetCollectorRequest is the request to retrieve a collector's information. This will
+// return a single collector's information, represented by the Collector message.
+message GetCollectorRequest {
+  // (required) The ID of the collector to retrieve.
+  string id = 1 [(buf.validate.field).cel = {
+    id: "get_collector_request.id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// CollectorType represents the type of collector.
+enum CollectorType {
+  COLLECTOR_TYPE_UNSPECIFIED = 0;
+  COLLECTOR_TYPE_ALLOY = 1;
+  COLLECTOR_TYPE_OTEL = 2;
+}
+
+// Collector represents the data for a single Alloy Collector. The ID is used to uniquely
+// identify the Collector, while the combination of local_attributes and
+// remote_attributes are used to determine which pipelines to include in the
+// collector's configuration.
+message Collector {
+  // The ID of the collector.
+  string id = 1;
+
+  // The last set of received local attributes from the Collector in a
+  // RegisterCollectorRequest.
+  map<string, string> local_attributes = 2;
+
+  // The remote attribute for the collector. Remote attributes used to be
+  // named attribute overrides.
+  // These will take precedence over any local attributes that are set in the
+  // collector's local configuration *except* for any attributes prefixed with
+  // "collector". collector.* attributes are reserved for use by the Fleet
+  // Management service.
+  //
+  // These limits mirror MaxRemoteAttributesCount, MaxAttributeKeyLength, and
+  // MaxAttributeValueLength in pkg/collectorutils/validation.go, which the
+  // handlers re-check. Proto options can't reference Go constants, so when
+  // updating these limits, make sure to update those constants as well.
+  map<string, string> remote_attributes = 3 [(buf.validate.field).map = {
+    max_pairs: 100,
+    keys: {string: {max_len: 100}},
+    values: {string: {max_len: 150}}
+  }];
+
+  // The timestamp that the collector was created in the Fleet Management service.
+  optional google.protobuf.Timestamp created_at = 4;
+
+  // The timestamp that the collector was last updated in the Fleet Management service.
+  optional google.protobuf.Timestamp updated_at = 5;
+
+  // The name of the collector. This is used for display purposes only and is not
+  // used to determine the collector's configuration.
+  string name = 6;
+
+  // Whether remote configuration for the collector is enabled or not. If the collector is disabled,
+  // it will receive empty configurations from the Fleet Management service.
+  optional bool enabled = 7;
+
+  // The timestamp of when the collector was marked inactive.
+  optional google.protobuf.Timestamp marked_inactive_at = 8;
+
+  // The type of collector.
+  CollectorType collector_type = 9;
+
+  // The collector's computed runtime state. Populated only when include_state is
+  // set on ListCollectors; otherwise unset.
+  CollectorState state = 10;
+}
+
+// CollectorState carries a collector's computed runtime state. It is returned on
+// ListCollectors when state is requested, letting callers avoid a separate
+// GetState call for status and last-seen information.
+message CollectorState {
+  // The computed health status of the collector: "healthy", "warning", or
+  // "error".
+  string status = 1;
+
+  // The collector's most recent heartbeat. Unset when no heartbeat exists.
+  optional google.protobuf.Timestamp last_seen = 2;
+
+  // The collector's last reported remote config status and error message.
+  // Unset when the collector has no agent-to-server data yet.
+  RemoteConfigStatus remote_config_status = 3;
+
+  // The collector's reported OpAMP capabilities bitmask. Unset when the
+  // collector has no agent-to-server data yet.
+  optional uint64 capabilities = 4;
+}
+
+// ListCollectorsRequest lists Collectors with cursor-based pagination, optional
+// filtering, and configurable sort order.
+message ListCollectorsRequest {
+  // The field to sort results by.
+  enum SortBy {
+    SORT_BY_UNSPECIFIED = 0;
+    SORT_BY_ID = 1;
+    SORT_BY_LAST_MODIFIED = 2;
+  }
+
+  // A token for fetching the next page of results. When empty, the first page
+  // is returned. Use the next_page_token from a previous response to retrieve
+  // subsequent pages. If filter, sort_by, or sort_descending changes, omit this
+  // token and start again from the first page.
+  string page_token = 1;
+
+  // The maximum number of collectors to return per page. When unset or zero,
+  // the server default is used. The server returns exactly page_size collectors
+  // on every page that has more data to follow; the final page may be shorter
+  // (or empty) when the result set is exhausted.
+  int32 page_size = 2;
+
+  // The field to sort results by. Defaults to id when unspecified.
+  SortBy sort_by = 3;
+
+  // When true, sort results in descending order.
+  bool sort_descending = 4;
+
+  // The filters to apply to the list of Collectors. When unset, all Collectors
+  // are returned.
+  optional ListCollectorsFilter filter = 5;
+
+  // When true, populate each returned collector's state. Off by default.
+  bool include_state = 6;
+}
+
+// ListCollectorsFilter groups the optional filters applied when listing
+// Collectors.
+message ListCollectorsFilter {
+  // Prometheus-style matchers used to filter the list of Collectors. Matchers
+  // are applied in memory; the server keeps fetching and filtering rows until
+  // it has page_size matches before responding, so callers always receive a
+  // full page until the final one.
+  repeated string matchers = 1;
+
+  // The set of collector statuses to include in the response. Valid values are
+  // "healthy", "warning", and "error". When empty, collectors of all statuses
+  // are returned.
+  repeated string statuses = 2 [
+    (buf.validate.field).cel = {
+      id: "list_collectors_filter.statuses.valid",
+      message: "invalid status provided"
+      expression: "this.all(s, s in ['healthy', 'warning', 'error'])"
+    },
+    (buf.validate.field).cel = {
+      id: "list_collectors_filter.statuses.unique",
+      message: "duplicate statuses provided"
+      expression: "this.unique()"
+    }
+  ];
+
+  // Filter to Collectors whose ID contains this value. The match is a
+  // case-insensitive substring and is applied by the server before pagination.
+  optional string id = 3 [(buf.validate.field).string.max_len = 256];
+
+  // Filter to Collectors of this type. When unset, or when set to
+  // COLLECTOR_TYPE_UNSPECIFIED, Collectors of all types are returned. The
+  // filter is applied by the server before pagination.
+  optional CollectorType collector_type = 4 [(buf.validate.field).enum.defined_only = true];
+
+  // The set of collector activity states to include in the response. Valid
+  // values are "active" and "inactive". A Collector is "active" when it has not
+  // been marked inactive and "inactive" otherwise. When empty, Collectors of
+  // all activity states are returned. The filter is applied by the server
+  // before pagination (pushed down to SQL).
+  repeated string activity_states = 5 [
+    (buf.validate.field).cel = {
+      id: "list_collectors_filter.activity_states.valid",
+      message: "invalid activity state provided"
+      expression: "this.all(s, s in ['active', 'inactive'])"
+    },
+    (buf.validate.field).cel = {
+      id: "list_collectors_filter.activity_states.unique",
+      message: "duplicate activity states provided"
+      expression: "this.unique()"
+    }
+  ];
+}
+
+// ListCollectorsResponse is the response to listing collectors.
+message ListCollectorsResponse {
+  // The list of collectors for the current page.
+  repeated Collector collectors = 1;
+
+  // A token for fetching the next page. Empty when there are no more results.
+  string next_page_token = 2;
+}
+
+// CountCollectorsRequest counts Collectors matching the given filter.
+message CountCollectorsRequest {
+  // The filters to apply when counting Collectors. When unset, all Collectors
+  // are counted.
+  optional ListCollectorsFilter filter = 1;
+}
+
+// CountCollectorsResponse is the response to counting collectors.
+message CountCollectorsResponse {
+  // The total number of Collectors matching the filter.
+  int32 count = 1;
+}
+
+// CreateCollectorRequest is the request to create a new Collector. The collector's
+// local_attributes are ignored; local attributes are owned by collector registration.
+message CreateCollectorRequest {
+  option (buf.validate.message).cel = {
+    id: "create_collector_request.collector.required",
+    message: "collector is missing",
+    expression: "has(this.collector)"
+  };
+  option (buf.validate.message).cel = {
+    id: "create_collector_request.collector.id.empty",
+    message: "id is empty",
+    expression: "!has(this.collector) || this.collector.id != ''"
+  };
+
+  // (required) The Collector to create.
+  Collector collector = 1;
+}
+
+// UpdateCollectorRequest is the request to update an existing Collector. It will update the
+// Collector with the exact values provided in the request. Updates are not selective, and
+// any attributes that are not provided will be removed from the Collector. The collector's
+// local_attributes are ignored; local attributes are owned by collector registration.
+message UpdateCollectorRequest {
+  option (buf.validate.message).cel = {
+    id: "update_collector_request.collector.required",
+    message: "collector is missing",
+    expression: "has(this.collector)"
+  };
+  option (buf.validate.message).cel = {
+    id: "update_collector_request.collector.id.empty",
+    message: "id is empty",
+    expression: "!has(this.collector) || this.collector.id != ''"
+  };
+
+  Collector collector = 1;
+}
+
+// DeleteCollectorRequest is the request to delete an existing Collector.
+message DeleteCollectorRequest {
+  // (required) The ID of the collector to delete.
+  string id = 1 [(buf.validate.field).cel = {
+    id: "delete_collector_request.id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// BulkUpdateCollectorsRequest is a request to update multiple Collectors' remote_attributes
+// in a single request. The update will be applied in a single transaction, so any errors will
+// cause the entire request to fail and no Collectors will be updated.
+//
+// A BulkUpdateCollectorsRequest can be used to add, remove, replace, move, or copy remote
+// attributes for the specified Collectors.
+message BulkUpdateCollectorsRequest {
+  // (required)The IDs of the Collectors to update, must be non-empty.
+  repeated string ids = 1 [(buf.validate.field).cel = {
+    id: "bulk_update_collectors_request.ids.empty",
+    message: "must provide at least one collector ID",
+    expression: "this.size() > 0"
+  }];
+
+  // (required) The operations to apply to the Collectors. They are applied in the order they are provided.
+  repeated Operation ops = 2 [(buf.validate.field).cel = {
+    id: "bulk_update_collectors_request.ops.empty",
+    message: "must provide at least one operation",
+    expression: "this.size() > 0"
+  }];
+}
+
+// An Operation is a single operation to apply to a Collector's remote_attributes
+message Operation {
+  enum OpType {
+    UNKNOWN = 0;
+    ADD = 1;
+    REMOVE = 2;
+    REPLACE = 3;
+    MOVE = 4;
+    COPY = 5;
+  }
+
+  // (required) Operation to perform
+  OpType op = 1;
+
+  // (required) Path for the operation, this is a JSON path. For example, to access the "foo" remote
+  // attribute for a Collector, the path would be "remoteAttributes.foo".
+  string path = 2;
+
+  // Source path for move or copy operations. Used by the MOVE and COPY operations to specify
+  // the source path to move or copy the value from.
+  optional string from = 3;
+
+  // Value for add and replace operations, as well as selective removal.
+  optional string value = 4;
+
+  // Old value to match against for a selective replace. For example, an oldValue of "bar" would
+  // only replace a remote attribute if the current value is "bar".
+  optional string oldValue = 5; // Old value for selective replace
+}
+
+// BulkUpdateCollectorsResponse is the response to a BulkUpdateCollectorsRequest. This message is
+// empty and the results of the update are defined by the HTTP status code of the response.
+message BulkUpdateCollectorsResponse {
+}
+
+// BulkDeleteCollectorsRequest is a request to delete multiple Collectors.
+message BulkDeleteCollectorsRequest {
+  // (required) The IDs of the Collectors to delete, must be non-empty. If any Collectors do not exist, the
+  // request will fail and no Collectors will be deleted.
+  repeated string ids = 1 [(buf.validate.field).cel = {
+    id: "bulk_delete_collectors_request.ids.empty",
+    message: "empty list of ids",
+    expression: "this.size() > 0"
+  }];
+}
+
+// BulkDeleteCollectorsResponse is the response to a BulkDeleteCollectorsRequest. This message is
+// empty and the results of the delete are defined by the HTTP status code of the response.
+message BulkDeleteCollectorsResponse {
+}
+
+// DeleteCollectorResponse is the response to a DeleteCollectorRequest. This message is empty and
+// the results of the delete are defined by the HTTP status code of the response.
+message DeleteCollectorResponse {
+}
+
+// ListCollectorAttributesRequest is the request to list all attributes that are used for all collectors.
+message ListCollectorAttributesRequest {
+}
+
+// ListCollectorAttributesResponse is the response to a ListCollectorAttributesRequest. It contains
+// maps of all attributes and all their values that are used for all collectors.
+message ListCollectorAttributesResponse {
+  map<string, Attributes> local_attributes = 1;
+  map<string, Attributes> remote_attributes = 2;
+}
+
+// Attributes represents a list of values for a single attribute.
+message Attributes {
+  repeated Value values = 1;
+}
+
+// Value represents a single value for an attribute.
+message Value {
+  string value = 1;
+}
+
+// CollectorService is the service that provides remote configuration for the collector.
+// It is used to register and update the collector's remote attributes, and to fetch the
+// collector's configuration.
+service CollectorService {
+  // GetCollector returns information about the collector.
+  rpc GetCollector (GetCollectorRequest) returns (Collector);
+
+  // ListCollectors returns a paginated list of collectors with optional matcher
+  // filtering and configurable sort order.
+  rpc ListCollectors (ListCollectorsRequest) returns (ListCollectorsResponse);
+
+  // CountCollectors returns the total number of collectors matching the given
+  // filter. It accepts the same filter as ListCollectors.
+  rpc CountCollectors (CountCollectorsRequest) returns (CountCollectorsResponse);
+
+  // CreateCollector registers a new collector.
+  rpc CreateCollector (CreateCollectorRequest) returns (Collector);
+
+  // UpdateCollector updates an existing collector.
+  rpc UpdateCollector (UpdateCollectorRequest) returns (Collector);
+
+  // BulkUpdateCollectors updates multiple collectors.
+  rpc BulkUpdateCollectors (BulkUpdateCollectorsRequest) returns (BulkUpdateCollectorsResponse);
+
+  // BulkDeleteCollectors deletes multiple collectors.
+  rpc BulkDeleteCollectors (BulkDeleteCollectorsRequest) returns (BulkDeleteCollectorsResponse);
+
+  // DeleteCollector deletes an existing collector.
+  rpc DeleteCollector (DeleteCollectorRequest) returns (DeleteCollectorResponse);
+
+  // ListCollectorAttributes returns all attributes that are used for all collectors.
+  rpc ListCollectorAttributes (ListCollectorAttributesRequest) returns (ListCollectorAttributesResponse);
+}
