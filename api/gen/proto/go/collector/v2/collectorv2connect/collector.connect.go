@@ -5,7 +5,7 @@
 package collectorv2connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
 	errors "errors"
 	v2 "github.com/grafana/fleet-management-api/api/gen/proto/go/collector/v2"
