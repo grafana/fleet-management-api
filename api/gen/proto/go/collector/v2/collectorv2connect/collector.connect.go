@@ -33,6 +33,9 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// CollectorServicePreviewConfigProcedure is the fully-qualified name of the CollectorService's
+	// PreviewConfig RPC.
+	CollectorServicePreviewConfigProcedure = "/collector.v2.CollectorService/PreviewConfig"
 	// CollectorServiceGetCollectorProcedure is the fully-qualified name of the CollectorService's
 	// GetCollector RPC.
 	CollectorServiceGetCollectorProcedure = "/collector.v2.CollectorService/GetCollector"
@@ -65,6 +68,7 @@ const (
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
 	collectorServiceServiceDescriptor                       = v2.File_collector_v2_collector_proto.Services().ByName("CollectorService")
+	collectorServicePreviewConfigMethodDescriptor           = collectorServiceServiceDescriptor.Methods().ByName("PreviewConfig")
 	collectorServiceGetCollectorMethodDescriptor            = collectorServiceServiceDescriptor.Methods().ByName("GetCollector")
 	collectorServiceListCollectorsMethodDescriptor          = collectorServiceServiceDescriptor.Methods().ByName("ListCollectors")
 	collectorServiceCountCollectorsMethodDescriptor         = collectorServiceServiceDescriptor.Methods().ByName("CountCollectors")
@@ -78,6 +82,9 @@ var (
 
 // CollectorServiceClient is a client for the collector.v2.CollectorService service.
 type CollectorServiceClient interface {
+	// PreviewConfig returns the configuration a collector would receive, without
+	// any of the side effects of a collector check-in. It is meant for the UI.
+	PreviewConfig(context.Context, *connect.Request[v2.PreviewConfigRequest]) (*connect.Response[v2.PreviewConfigResponse], error)
 	// GetCollector returns information about the collector.
 	GetCollector(context.Context, *connect.Request[v2.GetCollectorRequest]) (*connect.Response[v2.Collector], error)
 	// ListCollectors returns a paginated list of collectors with optional matcher
@@ -110,6 +117,13 @@ type CollectorServiceClient interface {
 func NewCollectorServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) CollectorServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &collectorServiceClient{
+		previewConfig: connect.NewClient[v2.PreviewConfigRequest, v2.PreviewConfigResponse](
+			httpClient,
+			baseURL+CollectorServicePreviewConfigProcedure,
+			connect.WithSchema(collectorServicePreviewConfigMethodDescriptor),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
 		getCollector: connect.NewClient[v2.GetCollectorRequest, v2.Collector](
 			httpClient,
 			baseURL+CollectorServiceGetCollectorProcedure,
@@ -169,6 +183,7 @@ func NewCollectorServiceClient(httpClient connect.HTTPClient, baseURL string, op
 
 // collectorServiceClient implements CollectorServiceClient.
 type collectorServiceClient struct {
+	previewConfig           *connect.Client[v2.PreviewConfigRequest, v2.PreviewConfigResponse]
 	getCollector            *connect.Client[v2.GetCollectorRequest, v2.Collector]
 	listCollectors          *connect.Client[v2.ListCollectorsRequest, v2.ListCollectorsResponse]
 	countCollectors         *connect.Client[v2.CountCollectorsRequest, v2.CountCollectorsResponse]
@@ -178,6 +193,11 @@ type collectorServiceClient struct {
 	bulkDeleteCollectors    *connect.Client[v2.BulkDeleteCollectorsRequest, v2.BulkDeleteCollectorsResponse]
 	deleteCollector         *connect.Client[v2.DeleteCollectorRequest, v2.DeleteCollectorResponse]
 	listCollectorAttributes *connect.Client[v2.ListCollectorAttributesRequest, v2.ListCollectorAttributesResponse]
+}
+
+// PreviewConfig calls collector.v2.CollectorService.PreviewConfig.
+func (c *collectorServiceClient) PreviewConfig(ctx context.Context, req *connect.Request[v2.PreviewConfigRequest]) (*connect.Response[v2.PreviewConfigResponse], error) {
+	return c.previewConfig.CallUnary(ctx, req)
 }
 
 // GetCollector calls collector.v2.CollectorService.GetCollector.
@@ -227,6 +247,9 @@ func (c *collectorServiceClient) ListCollectorAttributes(ctx context.Context, re
 
 // CollectorServiceHandler is an implementation of the collector.v2.CollectorService service.
 type CollectorServiceHandler interface {
+	// PreviewConfig returns the configuration a collector would receive, without
+	// any of the side effects of a collector check-in. It is meant for the UI.
+	PreviewConfig(context.Context, *connect.Request[v2.PreviewConfigRequest]) (*connect.Response[v2.PreviewConfigResponse], error)
 	// GetCollector returns information about the collector.
 	GetCollector(context.Context, *connect.Request[v2.GetCollectorRequest]) (*connect.Response[v2.Collector], error)
 	// ListCollectors returns a paginated list of collectors with optional matcher
@@ -255,6 +278,13 @@ type CollectorServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewCollectorServiceHandler(svc CollectorServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	collectorServicePreviewConfigHandler := connect.NewUnaryHandler(
+		CollectorServicePreviewConfigProcedure,
+		svc.PreviewConfig,
+		connect.WithSchema(collectorServicePreviewConfigMethodDescriptor),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
 	collectorServiceGetCollectorHandler := connect.NewUnaryHandler(
 		CollectorServiceGetCollectorProcedure,
 		svc.GetCollector,
@@ -311,6 +341,8 @@ func NewCollectorServiceHandler(svc CollectorServiceHandler, opts ...connect.Han
 	)
 	return "/collector.v2.CollectorService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case CollectorServicePreviewConfigProcedure:
+			collectorServicePreviewConfigHandler.ServeHTTP(w, r)
 		case CollectorServiceGetCollectorProcedure:
 			collectorServiceGetCollectorHandler.ServeHTTP(w, r)
 		case CollectorServiceListCollectorsProcedure:
@@ -337,6 +369,10 @@ func NewCollectorServiceHandler(svc CollectorServiceHandler, opts ...connect.Han
 
 // UnimplementedCollectorServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedCollectorServiceHandler struct{}
+
+func (UnimplementedCollectorServiceHandler) PreviewConfig(context.Context, *connect.Request[v2.PreviewConfigRequest]) (*connect.Response[v2.PreviewConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("collector.v2.CollectorService.PreviewConfig is not implemented"))
+}
 
 func (UnimplementedCollectorServiceHandler) GetCollector(context.Context, *connect.Request[v2.GetCollectorRequest]) (*connect.Response[v2.Collector], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("collector.v2.CollectorService.GetCollector is not implemented"))
