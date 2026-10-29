@@ -1,6 +1,6 @@
 FROM bufbuild/buf:1.43.0 AS buf
 
-FROM golang:1.26.10@sha256:672c944cfd07599b5f1bb179869270cdc94c6254e41db4d431259693cb286b82
+FROM golang:1.26.10@sha256:670bb5aa5349ae03b8516764718486f4f16399134bdc9acd0c46a23f043ab05c
 
 # Copy the buf binary from the buf image to the final image
 COPY --from=buf /usr/local/bin/buf /usr/local/bin/buf
