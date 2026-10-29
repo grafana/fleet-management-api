@@ -29,6 +29,27 @@ enum RemoteConfigStatuses {
     RemoteConfigStatuses_FAILED = 3;
 }
 
+// PreviewConfigRequest is the request message to preview a collector's
+// configuration.
+message PreviewConfigRequest {
+  // (required) The ID of the collector to preview the configuration for.
+  string id = 1 [(buf.validate.field).cel = {
+    id: "preview_config_request.id.empty",
+    message: "id is empty",
+    expression: "this.size() > 0"
+  }];
+}
+
+// PreviewConfigResponse is the response message that contains the previewed
+// configuration of a collector.
+message PreviewConfigResponse {
+  // The full configuration the collector would receive.
+  string content = 1;
+
+  // hash is the hash of the configuration content.
+  string hash = 2;
+}
+
 // GetCollectorRequest is the request to retrieve a collector's information. This will
 // return a single collector's information, represented by the Collector message.
 message GetCollectorRequest {
@@ -382,6 +403,12 @@ message Value {
 // It is used to register and update the collector's remote attributes, and to fetch the
 // collector's configuration.
 service CollectorService {
+  // PreviewConfig returns the configuration a collector would receive, without
+  // any of the side effects of a collector check-in. It is meant for the UI.
+  rpc PreviewConfig (PreviewConfigRequest) returns (PreviewConfigResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  };
+
   // GetCollector returns information about the collector.
   rpc GetCollector (GetCollectorRequest) returns (Collector);
 
